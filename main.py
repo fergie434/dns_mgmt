@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from tdns_helper import tdns_api
-from fortigate_api import FortiGate, FortiGateAPI
+from fortigate_api import FortiGateAPI
 from netaddr import EUI
 load_dotenv()
 
