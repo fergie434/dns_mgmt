@@ -35,6 +35,14 @@ def sync_tdns_to_fgt(tdns_reserved, fgt_reserved, fgt_dhcp_scope):
             dhcp_config['reserved-address'].append(lease)
             FGT.cmdb.system_dhcp.server.update(dhcp_config)
 
+    dhcp_config = FGT.cmdb.system_dhcp.server.get(filter=f"id=={fgt_dhcp_scope['id']}")[0]
+    for fgt_lease in fgt_reserved:
+        if normalize_mac(fgt_lease['mac']) not in tdns_mac_list:
+            LOGGER.info(f"Deleting unknown lease from fortigate for {fgt_lease['mac']}")
+            dhcp_config['reserved-address'].remove(fgt_lease)
+            ...
+    FGT.cmdb.system_dhcp.server.update(dhcp_config)
+
 def main():
     scopes = TDNS.get_dhcp_scopes()
 
