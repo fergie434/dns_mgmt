@@ -41,10 +41,11 @@ def sync_tdns_to_fgt(tdns_reserved, fgt_reserved, fgt_dhcp_scope):
         if normalize_mac(fgt_lease['mac']) not in tdns_mac_list:
             LOGGER.info(f"Deleting unknown lease from fortigate for {fgt_lease['mac']}")
             dhcp_config['reserved-address'].remove(fgt_lease)
-            ...
+
     FGT.cmdb.system_dhcp.server.update(dhcp_config)
 
 def main():
+    LOGGER.info('Getting DHCP Scopes')
     scopes = TDNS.get_dhcp_scopes()
 
     # Get TDNS DHCP Scope
@@ -56,14 +57,19 @@ def main():
 
     tdns_main_scope = TDNS.get_dhcp_scope(tdns_main_scope['name'])
     tdns_reserved = tdns_main_scope['reservedLeases']
+    LOGGER.info(f"Retreived {len(tdns_reserved)} TDNS reservations")
 
     # Get FGT DHCP Scope
     fgt_dhcp_servers = FGT.cmdb.system_dhcp.server.get()
     for server in fgt_dhcp_servers:
         if server['domain'] == DHCP_SEARCH_DOMAIN:
             fgt_dhcp_server = server
+    fgt_reserved = fgt_dhcp_server['reserved-address']
+    LOGGER.info(f"Retreived {len(fgt_reserved)} FGT reservations")
 
-    sync_tdns_to_fgt(tdns_reserved, fgt_dhcp_server['reserved-address'], fgt_dhcp_server)
+    sync_tdns_to_fgt(tdns_reserved, fgt_reserved, fgt_dhcp_server)
 
 if __name__ == '__main__':
+    LOGGER.info("Script Starting")
     main()
+    LOGGER.info("Script Complete")
