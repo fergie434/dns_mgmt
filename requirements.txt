@@ -1,2 +1,4 @@
 tdnss==0.2.1
 python-dotenv==1.2.1
+fortigate-api==2.0.7
+netaddr==1.3.0

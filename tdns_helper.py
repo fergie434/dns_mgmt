@@ -1,6 +1,6 @@
 import requests
 import os
-from urllib.parse import urljoin, parse_qs
+from urllib.parse import urljoin
 
 class tdns_api():
     api_key=None
