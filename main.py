@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from tdns_helper import tdns_api
 from fortigate_api import FortiGateAPI
 from netaddr import EUI
+import log_helper
 load_dotenv()
 
 TDNS_API_KEY=os.getenv('tdns_api_key')
@@ -12,6 +13,7 @@ FORTIGATE_URL=os.getenv('fortigate_url')
 DHCP_SEARCH_DOMAIN = os.getenv('dhcp_search_domain')
 TDNS = tdns_api(api_key=TDNS_API_KEY, api_url=TDNS_URL)
 FGT = FortiGateAPI(FORTIGATE_URL, token=FORTIGATE_API_KEY, verify=False)
+LOGGER = log_helper.setup_logging('dns_mgmt.log')
 
 def normalize_mac(mac):
     mac = EUI(mac)
@@ -22,7 +24,7 @@ def sync_tdns_to_fgt(tdns_reserved, fgt_reserved, fgt_dhcp_scope):
     fgt_mac_list = [normalize_mac(i['mac']) for i in fgt_reserved]
     for tdns_lease in tdns_reserved:
         if normalize_mac(tdns_lease['hardwareAddress']) not in fgt_mac_list:
-            print(f"Adding lease to FGT - {tdns_lease['address']}/{tdns_lease['hardwareAddress']}")
+            LOGGER.info(f"Adding lease to FGT - {tdns_lease['address']}/{tdns_lease['hardwareAddress']}")
             dhcp_config = FGT.cmdb.system_dhcp.server.get(filter=f"id=={fgt_dhcp_scope['id']}")[0]
             lease = {
                 'type': 'mac',
