@@ -25,7 +25,7 @@ def sync_tdns_to_fgt(tdns_reserved, fgt_reserved, fgt_dhcp_scope):
     fgt_mac_list = [normalize_mac(i['mac']) for i in fgt_reserved]
     for tdns_lease in tdns_reserved:
         if normalize_mac(tdns_lease['hardwareAddress']) not in fgt_mac_list:
-            LOGGER.info(f"Adding lease to FGT - {tdns_lease['address']}/{tdns_lease['hardwareAddress']}")
+            LOGGER.info(f"Adding reservation to FGT - {tdns_lease['address']}/{tdns_lease['hardwareAddress']}")
             dhcp_config = FGT.cmdb.system_dhcp.server.get(filter=f"id=={fgt_dhcp_scope['id']}")[0]
             lease = {
                 'type': 'mac',
@@ -34,7 +34,13 @@ def sync_tdns_to_fgt(tdns_reserved, fgt_reserved, fgt_dhcp_scope):
                 'description': tdns_lease['comments']
             }
             dhcp_config['reserved-address'].append(lease)
-            FGT.cmdb.system_dhcp.server.update(dhcp_config)
+            try:
+                result = FGT.cmdb.system_dhcp.server.update(dhcp_config)
+                result.raise_for_status()
+                fgt_mac_list.append(normalize_mac(lease['mac']))
+            except:
+                nl = '\n'
+                LOGGER.warning(f"Creating {tdns_lease['address']}/{tdns_lease['hardwareAddress']} failed.{nl}Error: {nl.join(result.json()['cli_error'])}")
 
     dhcp_config = FGT.cmdb.system_dhcp.server.get(filter=f"id=={fgt_dhcp_scope['id']}")[0]
     for fgt_lease in fgt_reserved:
